@@ -320,8 +320,8 @@ def get_city_suggestions():
     if not query:
         return jsonify([])
 
-    api_key = 'c30d188bc17fc21f941f2cb60629c583' # Use your OpenWeatherMap API key here
-    if not api_key or api_key == 'c30d188bc17fc21f941f2cb60629c583':
+    api_key = 'YOUR_OPENWEATHERMAP_API_KEY_HERE' # Use your OpenWeatherMap API key here
+    if not api_key or api_key == 'YOUR_OPENWEATHERMAP_API_KEY_HERE':
         return jsonify({"error": "API key not configured."}), 500
 
     # OpenWeatherMap's 'find' endpoint is good for city suggestions
