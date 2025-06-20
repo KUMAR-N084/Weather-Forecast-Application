@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ current_theme or 'light' }}">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>User Profile</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+<div class="nav-bar">
+    <h1>Weather App</h1>
+    <div class="nav-links">
+        <a href="{{ url_for('index') }}">Home</a>
+        <div class="user-menu">
+            <button id="user-menu-button" class="user-menu-button">
+              Hello, {{ username }} &#9662;
+            </button>
+            <div id="user-menu-dropdown" class="dropdown-content">
+              <a href="{{ url_for('profile') }}">Profile</a>
+              <a href="{{ url_for('settings') }}">Settings</a>
+              <a href="#" onclick="confirmLogout('{{ username }}'); return false;">Logout</a> {# Existing Logout Button #}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="profile-container">
+  <h1>User Profile</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-messages">
+        {% for category, message in messages %}
+          <div class="flash-message {{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <div class="profile-details">
+    <p><strong>Username:</strong> {{ user.username }}</p>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p><strong>Default City:</strong> {{ user.default_city or 'Not set' }}</p>
+    <p><strong>Theme:</strong> {{ user.settings.theme | capitalize or 'Light' }}</p>
+  </div>
+
+  {# Removed "Delete Account" button section #}
+
+</div>
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Hide flash messages on page load
+    hideFlashMessages();
+  });
+
+  // Function for Logout Confirmation (This should also be in your script.js)
+  function confirmLogout(username) {
+      if (confirm(`Are you sure you want to log out, ${username}?`)) {
+          window.location.href = "{{ url_for('logout') }}";
+      }
+  }
+
+  // hideFlashMessages function (assuming it's in script.js or defined globally)
+  function hideFlashMessages() {
+    document.querySelectorAll('.flash-messages .flash-message').forEach(message => {
+        if (!message.classList.contains('error')) {
+            setTimeout(() => {
+                message.style.opacity = '0';
+                setTimeout(() => message.remove(), 600);
+            }, 5000);
+        }
+    });
+  }
+</script>
+</body>
+</html>

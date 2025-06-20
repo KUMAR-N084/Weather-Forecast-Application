@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ current_theme or 'light' }}">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Login</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <nav class="nav-bar">
+    <h1><a href="{{ url_for('index') }}" style="color: var(--primary-button-bg); text-decoration:none;">Weather App</a></h1>
+    <div class="nav-links">
+      {# ADDED HOME LINK HERE #}
+      <a href="{{ url_for('index') }}">Home</a>
+      {% if logged_in %}
+      <div class="user-menu">
+        <button id="user-menu-button" class="user-menu-button" aria-haspopup="true" aria-expanded="false">
+          Hello, {{ username }} &#9662;
+        </button>
+        <div id="user-menu-dropdown" class="dropdown-content" aria-label="User menu">
+          <a href="{{ url_for('profile') }}">Profile</a>
+          <a href="{{ url_for('settings') }}">Settings</a>
+          <a href="#" onclick="confirmLogout('{{ username }}'); return false;">Logout</a>
+        </div>
+      </div>
+      {% else %}
+      <a href="{{ url_for('login') }}">Login</a>
+      <a href="{{ url_for('register') }}">Register</a>
+      {% endif %}
+    </div>
+  </nav>
+
+  <div class="login-container" role="main" aria-label="Login form">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-messages" role="alert">
+          {% for category, message in messages %}
+            <div class="flash-message {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    <div id="message" class="flash-message" aria-live="polite" style="display:none;"></div>
+    <form id="loginForm" novalidate autocomplete="on">
+      <input type="text" name="username" placeholder="Username" required autocomplete="username" aria-label="Username" style="margin: 10px auto;" />
+      <div class="password-container" style="position:relative; max-width:360px; width:100%; margin: 10px auto;">
+        <input type="password" id="password" name="password" placeholder="Password" required autocomplete="current-password" aria-label="Password" style="padding-right:50px; width:100%;" />
+        <span class="toggle-password-icon" role="button" aria-label="Toggle password visibility" tabindex="0" id="togglePassword" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); cursor:pointer; color: var(--text-color); width:28px; height:28px; display:flex; align-items:center; justify-content:center; user-select:none;">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M1.5 12S4.5 6 12 6s10.5 6 10.5 6-3 6-10.5 6S1.5 12 1.5 12z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </span>
+      </div>
+      <button type="submit">Login</button>
+      <div class="links">
+        <a href="{{ url_for('forgot_password') }}">Forgot Password?</a>
+        <a href="{{ url_for('register') }}">Register</a>
+      </div>
+    </form>
+  </div>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

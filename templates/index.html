@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ current_theme or 'light' }}">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Weather Dashboard</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <nav class="nav-bar">
+    <h1>Sky Buddy</h1>
+    <div class="nav-links">
+      <div id="auth-links">
+        {% if logged_in %}
+          <div class="user-menu">
+            <button id="user-menu-button" class="user-menu-button">
+              Hello, {{ username }} &#9662;
+            </button>
+            <div id="user-menu-dropdown" class="dropdown-content">
+              <a href="{{ url_for('profile') }}">Profile</a>
+              <a href="{{ url_for('settings') }}">Settings</a>
+              <a href="#" onclick="confirmLogout('{{ username }}'); return false;">Logout</a>
+            </div>
+          </div>
+        {% else %}
+          <a href="{{ url_for('login') }}">Login</a>
+          <a href="{{ url_for('register') }}">Register</a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for category, message in messages %}
+            <div class="flash-message {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    
+    <div id="error-message"></div>
+    <div id="loading" class="spinner"></div>
+
+    <div class="search-section">
+      <input type="text" id="city-input" placeholder="Enter city name" list="city-suggestions"/>
+      <datalist id="city-suggestions"></datalist>
+      <button id="search-button">Get Weather</button>
+    </div>
+
+    <div class="units-toggle" id="units-toggle">
+      <label><input type="radio" name="units" value="metric" checked /> °C, m/s</label>
+      <label><input type="radio" name="units" value="imperial" /> °F, mph</label>
+    </div>
+    
+    <section id="current-weather-section" class="forecast-section" hidden>
+      <h2>Weather in <span id="current-city"></span></h2>
+      <p>Date: <span id="current-date"></span></p>
+      <p>Local Time: <span id="current-time"></span></p>
+      <img id="current-weather-icon" src="" alt="Weather Icon" />
+      <p><span id="current-description"></span></p>
+      <p>Temperature: <span id="current-temp"></span><span class="temp-unit">°C</span></p>
+      
+      <div class="current-details">
+        <p class="detail-item">Humidity: <span id="current-humidity"></span>%</p>
+        <p class="detail-item">Wind Speed: <span id="current-wind-speed"></span> <span class="wind-unit">m/s</span></p>
+        <p class="detail-item">Feels Like: <span id="current-feels-like"></span><span class="temp-unit">°C</span></p>
+        <p class="detail-item">Pressure: <span id="current-pressure"></span> hPa</p>
+      </div>
+    </section>
+
+    <section id="hourly-forecast-section" class="forecast-section" hidden>
+      <h3>Next 24 Hours</h3>
+      <div class="hourly-list"></div>
+    </section>
+
+    <section id="daily-forecast-section" class="forecast-section" hidden>
+      <h3>Daily Forecast</h3>
+      <div class="daily-list"></div>
+    </section>
+
+    <section id="day-specific-hourly-display" class="forecast-section" hidden>
+      <button id="back-to-daily-button">&#8592; Back to Daily Forecast</button>
+      <h3 id="day-specific-hourly-title">Hourly Details for Selected Day</h3>
+      <div id="day-specific-hourly-list" class="hourly-list full-hourly-list"></div>
+    </section>
+  </div>
+
+  <script>
+    const defaultCityFromServer = "{{ defaultCityFromServer | safe }}";
+    const loggedInFromServer = "{{ logged_in | tojson }}";
+    const usernameFromServer = "{{ username | safe }}";
+  </script>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
