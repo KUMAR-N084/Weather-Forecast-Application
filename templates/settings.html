@@ -73,7 +73,7 @@
 </div>
 
 <script>
-    // Define confirmLogout function here as it's not linked via script.js for this page
+    // Defined confirm Logout function here as it's not linked via script.js for this page
     function confirmLogout(username) {
         if (confirm(`Are you sure you want to log out, ${username}?`)) {
             // Redirect to the logout URL
@@ -141,7 +141,6 @@
                     }
 
                     if (response.ok && data.success) {
-                        // Theme saved successfully
                     } else {
                         console.error('Failed to save theme preference:', data.message);
                         this.checked = !this.checked;
@@ -165,7 +164,7 @@
             });
         }
 
-        // Existing hideFlashMessages function
+        // hide Flash Messages function
         function hideFlashMessages() {
             document.querySelectorAll('.flash-messages .flash-message').forEach(message => {
                 if (!message.classList.contains('error')) {
