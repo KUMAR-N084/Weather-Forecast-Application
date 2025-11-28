@@ -53,14 +53,14 @@
     hideFlashMessages();
   });
 
-  // Function for Logout Confirmation (This should also be in your script.js)
+  // Function for Logout Confirmation 
   function confirmLogout(username) {
       if (confirm(`Are you sure you want to log out, ${username}?`)) {
           window.location.href = "{{ url_for('logout') }}";
       }
   }
 
-  // hideFlashMessages function (assuming it's in script.js or defined globally)
+  // hideFlashMessages function
   function hideFlashMessages() {
     document.querySelectorAll('.flash-messages .flash-message').forEach(message => {
         if (!message.classList.contains('error')) {
