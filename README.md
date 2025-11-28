@@ -1,4 +1,4 @@
-# my weather
+#  SKY BUDDY A WEATHER FORECAST APPLICATION
 A simple Flask based weather application built using Python(Backend) and HTML, CSS, Javascript(Frontend).
 The Weather Dashboard is a dynamic web application designed to provide users with accurate and up-to-date weather information from around the world. It allows users to search
 for any city and view comprehensive weather details including current conditions, hourly forecasts, and a 7-day outlook. The application incorporates modern web technologies
