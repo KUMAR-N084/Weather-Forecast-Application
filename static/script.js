@@ -24,7 +24,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Initialize other interactive elements
     const searchButton = document.getElementById('search-button');
     if (searchButton) {
         searchButton.addEventListener('click', () => fetchAndDisplayWeather());
@@ -88,7 +87,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- Login Form Submission ---
+    // Login Form Submission
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
         loginForm.addEventListener('submit', async function(event) {
@@ -99,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 const response = await fetch('/login', {
                     method: 'POST',
-                    body: formData // FormData will automatically set the correct Content-Type
+                    body: formData 
                 });
 
                 const result = await response.json();
@@ -107,7 +106,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (response.ok) {
                     displayMessage(result.message, 'success');
-                    // Set theme cookie from the response. This is handled by Flask's make_response now.
                     // Redirect to index or dashboard
                     window.location.href = '/'; 
                 } else {
@@ -131,7 +129,7 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 const response = await fetch('/register', {
                     method: 'POST',
-                    body: formData // FormData will automatically set the correct Content-Type
+                    body: formData
                 });
 
                 const result = await response.json();
@@ -141,8 +139,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     displayMessage(result.message, 'success');
                     registerForm.reset(); // Clear the form fields
                     setTimeout(() => {
-                        window.location.href = '/login'; // Redirect to login page
-                    }, 2000); // Redirect after a short delay
+                        window.location.href = '/login'; // Redirect to login page after delay
+                    }, 2000);
                 } else {
                     displayMessage(result.message, 'error');
                 }
@@ -162,7 +160,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
                 passwordInput.setAttribute('type', type);
                 this.setAttribute('aria-label', type === 'password' ? 'Show password' : 'Hide password');
-                // Optional: Change the icon SVG here if you have separate eye-open/eye-closed icons
             }
         });
     });
@@ -190,7 +187,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function fetchCitySuggestions(query) {
     const datalist = document.getElementById('city-suggestions');
-    if (query.length < 3) { // Only fetch suggestions for queries of 3 or more characters
+    if (query.length < 3) { // fetch suggestions for 3 or more characters
         datalist.innerHTML = '';
         return;
     }
@@ -277,7 +274,7 @@ async function fetchAndDisplayWeather(city = null, lat = null, lon = null) {
 
             const cityInputElement = document.getElementById('city-input');
             if (cityInputElement && cityToSearch) {
-                cityInputElement.value = ''; // Clear input after successful search
+                cityInputElement.value = '';
             }
         }
     } catch (error) {
@@ -296,7 +293,7 @@ function displayHourlyForecast(forecastList, tempUnit) {
     hourlyList.innerHTML = '';
     document.getElementById('hourly-forecast-section').hidden = false;
 
-    // The API provides 3-hour forecasts. We'll show the next 8 intervals (24 hours).
+    // The API provides 3-hour forecasts and shows next 24 hours weather with 8 different weather timings in 24 hour timeline
     const next24Hours = forecastList.slice(0, 8);
     next24Hours.forEach(hour => {
         const hourlyItem = document.createElement('div');
@@ -321,7 +318,6 @@ function displayDailyForecast(forecastList, tempUnit) {
 
     // Group forecast data by day
     forecastList.forEach(item => {
-        // Use YYYY-MM-DD for consistent key for filtering
         const dateKey = new Date(item.dt * 1000).toISOString().split('T')[0];
         const displayDate = new Date(item.dt * 1000).toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
         
@@ -342,14 +338,12 @@ function displayDailyForecast(forecastList, tempUnit) {
         dailyAggregates[dateKey].descriptions[desc] = (dailyAggregates[dateKey].descriptions[desc] || 0) + 1;
     });
 
-    // Process aggregated data for each day
     for (const dateKey in dailyAggregates) {
         const day = dailyAggregates[dateKey];
         const max_temp = Math.round(Math.max(...day.temps));
         const min_temp = Math.round(Math.min(...day.temps));
         const avg_pop = Math.round((day.pops.reduce((a, b) => a + b, 0) / day.pops.length) * 100);
 
-        // Find the most frequent icon and description for the day
         const representativeIcon = Object.keys(day.icons).reduce((a, b) => day.icons[a] > day.icons[b] ? a : b);
         const representativeDescription = Object.keys(day.descriptions).reduce((a, b) => day.descriptions[a] > day.descriptions[b] ? a : b);
 
@@ -367,7 +361,7 @@ function displayDailyForecast(forecastList, tempUnit) {
         dailyList.appendChild(dailyItem);
     }
 
-    // Add event listeners to "View Hourly" buttons
+    //  event listeners to View Hourly buttons
     document.querySelectorAll('.view-hourly-button').forEach(button => {
         button.addEventListener('click', (event) => {
             const selectedDate = event.target.dataset.date; // YYYY-MM-DD format
@@ -376,7 +370,6 @@ function displayDailyForecast(forecastList, tempUnit) {
             document.getElementById('day-specific-hourly-display').hidden = false;
             document.getElementById('back-to-daily-button').style.display = 'block';
 
-            // Filter allHourlyDataFromServer for the selected day
             const hourlyDataForSelectedDay = allHourlyDataFromServer.filter(item => 
                 new Date(item.dt * 1000).toISOString().split('T')[0] === selectedDate
             );
@@ -401,7 +394,7 @@ function displayDaySpecificHourlyForecast(hourlyData, selectedDate, tempUnit) {
 
     hourlyData.forEach(hour => {
         const hourlyItem = document.createElement('div');
-        hourlyItem.classList.add('hourly-item'); // Reuse hourly-item styling
+        hourlyItem.classList.add('hourly-item');
         hourlyItem.innerHTML = `
             <div>${new Date(hour.dt * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
             <img src="https://openweathermap.org/img/wn/${hour.weather[0].icon}.png" alt="${hour.weather[0].description}">
@@ -423,10 +416,9 @@ function displayMessage(message, type = 'info') {
     const messageDiv = document.getElementById('message');
     if (messageDiv) {
         messageDiv.textContent = message;
-        messageDiv.className = `flash-message ${type} show`; // Apply classes
+        messageDiv.className = `flash-message ${type} show`;
         messageDiv.style.display = 'block';
         
-        // Auto-hide success/info messages after 5 seconds
         if (type === 'success' || type === 'info') {
             setTimeout(() => {
                 messageDiv.classList.remove('show');
@@ -465,7 +457,7 @@ function hideAllForecastSections() {
         backButton.style.display = 'none';
     }
     // Clear any existing error messages when fetching new weather
-    const errorDiv = document.getElementById('message'); // Assuming 'message' is your primary message display
+    const errorDiv = document.getElementById('message');
     if (errorDiv) {
         errorDiv.textContent = '';
         errorDiv.style.display = 'none';
@@ -476,7 +468,6 @@ function hideAllForecastSections() {
 function hideFlashMessages() {
     const flashMessages = document.querySelectorAll('.flash-messages .flash-message');
     flashMessages.forEach(message => {
-        // Only auto-hide success and info messages
         if (message.classList.contains('success') || message.classList.contains('info')) {
             setTimeout(() => {
                 message.style.opacity = '0';
