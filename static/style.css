@@ -44,7 +44,7 @@ body {
     --background-gradient: linear-gradient(to bottom, #87CEEB, #E0F7FA);
     --border-radius-small: 8px; /* Defined for setting-item input */
     --input-text-color: var(--text-color); /* Added for setting-item input */
-    --input-bg: var(--input-background); /* Added for setting-item input */
+    --input-bg: var(--input-background); 
 }
 
 html[data-theme='dark'] {
@@ -191,12 +191,10 @@ html[data-theme='dark'] {
     box-shadow: var(--box-shadow);
     width: 95%;
     max-width: 500px; /* Adjust max-width as needed for these forms */
-    margin-top: 100px; /* Ensure space below fixed nav-bar */
+    margin-top: 100px;
     margin-bottom: 25px;
     text-align: center;
     border: 1px solid var(--border-color);
-    /* The `margin: 10px auto;` might conflict if not set after fixed margin-top */
-    /* It's better to ensure align-items: center on body handles horizontal centering */
 }
 
 
@@ -281,7 +279,7 @@ button:hover, .button-like:hover {
 .setting-item {
     margin-bottom: 15px;
     display: flex;
-    flex-direction: column; /* Stacks label and input */
+    flex-direction: column;
     gap: 8px; /* Space between label and input */
 }
 
@@ -294,21 +292,21 @@ button:hover, .button-like:hover {
 .setting-item input[type="number"] {
     padding: 10px;
     border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-small); /* assuming a smaller radius variable */
+    border-radius: var(--border-radius-small);
     background-color: var(--input-bg);
     color: var(--input-text-color);
     font-size: 1em;
-    width: 100%; /* Make input fill available width */
+    width: 100%;
     max-width: 250px; /* Limit max width for better aesthetics */
 }
-/* In style.css */
+/* style.css */
 .profile-actions {
     margin-top: 30px;
     text-align: center;
 }
 
 .delete-account-btn {
-    background-color: var(--accent-color-dark); /* Red or a warning color */
+    background-color: var(--accent-color-dark); /* Red color for warning button */
     color: white;
     padding: 10px 20px;
     border: none;
@@ -319,10 +317,10 @@ button:hover, .button-like:hover {
 }
 
 .delete-account-btn:hover {
-    background-color: #e74c3c; /* A slightly darker red on hover */
+    background-color: #e74c3c; /* A slightly darker red on hover for delete button */
 }   
 
-/* Responsive Design */
+/* start of Responsive Design */
 @media (max-width: 760px) {
     .nav-bar { flex-direction: column; gap: 10px; }
     .container,
@@ -333,7 +331,7 @@ button:hover, .button-like:hover {
     .profile-container,
     .settings-container {
         width: 100%;
-        margin-top: 150px; /* Increase margin for smaller screens if nav-bar wraps */
+        margin-top: 150px; /* margin increased for smaller screens if nav-bar wraps */
         border-radius: 0;
     }
     .daily-item, .hourly-item { flex-basis: 120px; }
