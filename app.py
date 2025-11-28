@@ -9,7 +9,7 @@ from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignat
 from collections import Counter
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'YOUR_SUPER_SECRET_KEY_HERE_REPLACE_ME' # <--- IMPORTANT: REPLACE THIS WITH A STRONG, UNIQUE KEY!
+app.config['SECRET_KEY'] = 'YOUR_SUPER_SECRET_KEY_HERE_REPLACE_ME' # REPLACE THIS WITH A STRONG, UNIQUE KEY!
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///weather_app.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
@@ -57,9 +57,8 @@ def index():
             logged_in = True
             default_city_from_db = user.default_city
 
-    # Provide a hardcoded default city if not logged in and no user-specific default city is set
     if not logged_in or not default_city_from_db:
-        default_city_for_frontend = "London" # Or any other city you prefer as a global default
+        default_city_for_frontend = "London"
     else:
         default_city_for_frontend = default_city_from_db
 
@@ -80,14 +79,13 @@ def login():
             session['user_id'] = user.id
             flash('Logged in successfully!', 'success')
 
-            # Set theme cookie based on user's preference or default
             response = make_response(jsonify(success=True, message='Logged in successfully!'))
-            theme = user.settings.get('theme', 'light') # Get user's preferred theme
-            response.set_cookie('theme', theme, max_age=60*60*24*365) # 1 year
+            theme = user.settings.get('theme', 'light') # user's preferred theme
+            response.set_cookie('theme', theme, max_age=60*60*24*365)
             return response
         else:
             return jsonify(success=False, message='Invalid username or password.'), 401
-    current_theme = request.cookies.get('theme', 'light') # Get theme from cookie for GET request
+    current_theme = request.cookies.get('theme', 'light')
     return render_template('login.html', logged_in='username' in session, current_theme=current_theme)
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -121,14 +119,13 @@ def register():
         except Exception as e:
             db.session.rollback()
             return jsonify(success=False, message='Registration failed due to a server error.'), 500
-    current_theme = request.cookies.get('theme', 'light') # Get theme from cookie for GET request
+    current_theme = request.cookies.get('theme', 'light')
     return render_template('register.html', logged_in='username' in session, current_theme=current_theme)
 
 @app.route('/logout')
 def logout():
     session.pop('username', None)
     session.pop('user_id', None)
-    # Clear the theme cookie on logout to revert to default or allow browser to set
     response = make_response(redirect(url_for('login')))
     response.set_cookie('theme', '', expires=0) # Expires immediately
     flash('You have been logged out.', 'info')
@@ -162,19 +159,19 @@ def settings():
         return redirect(url_for('login'))
 
     if request.method == 'POST':
-        # Check if it's a JSON request for theme update
+
         if request.is_json:
             data = request.get_json()
             new_theme = data.get('theme')
             if new_theme in ['light', 'dark']:
                 if 'settings' not in user.settings:
-                    user.settings = {} # Ensure settings is a mutable dictionary
+                    user.settings = {}
                 user.settings['theme'] = new_theme
                 try:
                     db.session.commit()
-                    # Set the theme cookie immediately for persistence across pages
+
                     response = make_response(jsonify(success=True, message='Theme updated successfully!'))
-                    response.set_cookie('theme', new_theme, max_age=60*60*24*365) # 1 year
+                    response.set_cookie('theme', new_theme, max_age=60*60*24*365) 
                     return response
                 except Exception as e:
                     db.session.rollback()
@@ -184,14 +181,13 @@ def settings():
 
         # Handle form submission for default city or other settings
         default_city = request.form.get('default_city')
-        # Add other form fields here if you have them, e.g., notification settings
+        
 
         user.default_city = default_city
         
-        # Example for saving notification settings from a form
+
         rain_alert = 'rain_alert' in request.form
         user.settings['rain_alert'] = rain_alert
-        # ... other notification settings
 
         try:
             db.session.commit()
@@ -218,10 +214,6 @@ def forgot_password():
 
         user = User.query.filter_by(email=email).first()
         if user:
-            # In a real app, you would generate a token and send a password reset email here.
-            # For this example, we'll just acknowledge the request.
-            # token = user.get_reset_token()
-            # send_password_reset_email(user.email, token) # You'd implement this function
             return jsonify(success=True, message='If an account with that email exists, a password reset link has been sent.')
         else:
             return jsonify(success=False, message='If an account with that email exists, a password reset link has been sent.')
@@ -261,7 +253,7 @@ def reset_token(token):
             flash('Failed to reset password due to a database error. Please try again.', 'error')
             return render_template('password_reset.html', token_valid=True, token=token)
 
-    # For GET request (displaying the reset form)
+    #displaying the reset form
     return render_template('password_reset.html', token_valid=True, token=token)
 
 # API endpoint to fetch weather data (client-side)
@@ -272,9 +264,8 @@ def get_weather():
     lon = request.args.get('lon')
     units = request.args.get('units', 'metric')
     
-    # --- IMPORTANT ---
     # Replace the placeholder below with your actual OpenWeatherMap API key.
-    api_key = 'c30d188bc17fc21f941f2cb60629c583' 
+    api_key = 'YOUR_OPENWEATHERMAP_API_KEY_HERE' 
 
     if not api_key or api_key == 'YOUR_OPENWEATHERMAP_API_KEY_HERE':
         return jsonify({"error": "API key not configured. Please add your API key in app.py."}), 500
@@ -290,7 +281,7 @@ def get_weather():
 
     try:
         current_response = requests.get(current_weather_url)
-        current_response.raise_for_status() # Raise an exception for HTTP errors
+        current_response.raise_for_status()
         current_data = current_response.json()
 
         forecast_response = requests.get(forecast_url)
@@ -301,7 +292,6 @@ def get_weather():
     except requests.exceptions.HTTPError as http_err:
         error_message = f"HTTP error occurred: {http_err} - {http_err.response.text}"
         print(error_message)
-        # Check for 404 specifically
         if http_err.response.status_code == 404:
              return jsonify({"error": f"City not found. Please check the spelling."}), 404
         return jsonify({"error": "City not found or API error.", "details": http_err.response.text}), http_err.response.status_code
@@ -324,7 +314,6 @@ def get_city_suggestions():
     if not api_key or api_key == 'YOUR_OPENWEATHERMAP_API_KEY_HERE':
         return jsonify({"error": "API key not configured."}), 500
 
-    # OpenWeatherMap's 'find' endpoint is good for city suggestions
     find_url = f"http://api.openweathermap.org/data/2.5/find?q={query}&type=like&sort=population&cnt=10&appid={api_key}"
 
     try:
@@ -345,7 +334,6 @@ def get_city_suggestions():
 
 # Run the Flask app
 if __name__ == '__main__':
-    # Ensure database tables are created when the app starts
     with app.app_context():
         db.create_all()
     app.run(debug=True)
