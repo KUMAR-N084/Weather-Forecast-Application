@@ -1,26 +1,39 @@
-# Sky Buddy — Weather Forecast Application
+# Sky Buddy — Full-Stack Weather Forecast Application
 
-Sky Buddy is a Flask-based weather dashboard that lets users look up weather by city or device coordinates. It combines a Python backend, a browser-based dashboard, and the OpenWeatherMap API.
+Sky Buddy is a weather dashboard built with **Python, Flask, SQLAlchemy, SQLite, HTML, CSS, and JavaScript**. It retrieves live weather information from the OpenWeatherMap API and provides account-based preferences for a more personalised experience.
+
+This repository is the primary weather project in my portfolio.
 
 ## Features
 
-- Current weather and multi-day forecast lookup
-- City search and city suggestions
-- Location-based weather lookup using latitude and longitude
-- Metric, imperial, and standard unit support
-- User registration, login, profile, and settings pages
-- Password reset flow using time-limited signed tokens
-- Responsive frontend with theme/settings support
+- Search for current weather by city
+- Retrieve weather using browser/device coordinates
+- View forecast information from the weather provider
+- Search city suggestions
+- Switch between metric, imperial, and standard units
+- Register, log in, and log out
+- Store user profile details and a preferred city
+- Save user interface preferences, including light/dark theme
+- Responsive pages for the dashboard, login, registration, profile, and settings
 
-Weather results require a valid OpenWeatherMap API key. The application has not been independently tested in this environment, so configure the key and follow the setup steps before relying on live results.
+## Technology stack
 
-## Technology
+| Layer | Technologies |
+|---|---|
+| Backend | Python, Flask |
+| Database | SQLite, Flask-SQLAlchemy |
+| Frontend | HTML5, CSS3, JavaScript |
+| External service | OpenWeatherMap API |
+| Configuration | python-dotenv |
+| Authentication | Flask sessions, Werkzeug password hashing |
 
-- Python and Flask
-- Flask-SQLAlchemy with SQLite by default
-- HTML, CSS, and JavaScript
-- Requests for OpenWeatherMap API calls
-- python-dotenv for local environment configuration
+## How it works
+
+1. The user searches for a city or allows location access in the browser.
+2. The frontend sends the location and selected units to the Flask application.
+3. Flask validates the request and calls the OpenWeatherMap service using a server-side API key.
+4. The application returns the weather response to the frontend.
+5. Registered users can save account preferences such as their default city and theme.
 
 ## Project structure
 
@@ -29,6 +42,7 @@ Weather-Forecast-Application/
 ├── app.py
 ├── requirements.txt
 ├── .env.example
+├── .gitignore
 ├── templates/
 │   ├── index.html
 │   ├── login.html
@@ -42,74 +56,77 @@ Weather-Forecast-Application/
     └── style.css
 ```
 
-## Setup (Windows PowerShell)
+## Run locally (Windows PowerShell)
 
-1. Clone the repository and open its folder.
-2. Create and activate a virtual environment:
+### 1. Clone the repository
 
-   ```powershell
-   py -m venv .venv
-   .\.venv\Scripts\Activate.ps1
-   ```
+```powershell
+git clone https://github.com/KUMAR-N084/Weather-Forecast-Application.git
+cd Weather-Forecast-Application
+```
 
-3. Install dependencies:
+### 2. Create and activate a virtual environment
 
-   ```powershell
-   pip install -r requirements.txt
-   ```
+```powershell
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
 
-4. Create your local configuration:
+### 3. Install dependencies
 
-   ```powershell
-   Copy-Item .env.example .env
-   ```
+```powershell
+pip install -r requirements.txt
+```
 
-5. Generate a unique Flask secret key:
+### 4. Configure environment variables
 
-   ```powershell
-   python -c "import secrets; print(secrets.token_hex(32))"
-   ```
+```powershell
+Copy-Item .env.example .env
+```
 
-   Add the generated value to `.env` as `SECRET_KEY=...`.
+Generate a unique Flask secret key:
 
-6. Get an API key from OpenWeatherMap and set `OPENWEATHERMAP_API_KEY=...` in `.env`.
+```powershell
+python -c "import secrets; print(secrets.token_hex(32))"
+```
 
-7. Start the application:
-
-   ```powershell
-   python app.py
-   ```
-
-8. Open `http://127.0.0.1:5000` in your browser. The database tables are created when the app starts.
-
-## Environment variables
+Add the generated value and your own OpenWeatherMap API key to the local `.env` file.
 
 | Variable | Purpose |
 |---|---|
-| `SECRET_KEY` | Required random key used for sessions and signed password-reset tokens |
-| `DATABASE_URL` | Optional SQLAlchemy database URL; defaults to SQLite |
+| `SECRET_KEY` | Required secret for Flask sessions and signed tokens |
 | `OPENWEATHERMAP_API_KEY` | Required for live weather and city suggestions |
-| `FLASK_DEBUG` | Defaults to `false`; use only during local development |
-| `HOST` / `PORT` | Defaults to `127.0.0.1` / `5000` |
-| `COOKIE_SECURE` | Set to `true` when deploying over HTTPS |
-| `LOG_LEVEL` | Defaults to `INFO` |
+| `DATABASE_URL` | Optional SQLAlchemy database URL; defaults to SQLite |
+| `FLASK_DEBUG` | Enables Flask debug mode only when explicitly configured |
+| `HOST` / `PORT` | Local server host and port |
+| `COOKIE_SECURE` | Set to `true` when serving over HTTPS |
+| `LOG_LEVEL` | Application logging level |
 
-## Security and deployment notes
+### 5. Start the application
 
-- Keep `.env` private. Never commit API keys, Flask secret keys, database credentials, or user data.
-- The weather API is called from the Flask backend; the API key is not embedded in browser JavaScript.
-- Outbound weather requests use HTTPS, request timeouts, and generic client-facing error messages.
-- Use HTTPS and set `COOKIE_SECURE=true` for production.
-- Before production deployment, review CSRF protection, login rate limiting, password-reset delivery and abuse controls, database backups, and privacy requirements.
-- If a credential was ever committed to Git, revoke or rotate it. Deleting it from the latest version does not erase it from Git history.
+```powershell
+python app.py
+```
 
-## Troubleshooting
+Open [http://127.0.0.1:5000](http://127.0.0.1:5000) in your browser. The application creates its database tables when it starts.
 
-- **API key not configured:** confirm `OPENWEATHERMAP_API_KEY` exists in your local `.env` file and restart the app.
-- **Invalid API credentials:** check the key status with OpenWeatherMap and confirm the account/API access is active.
-- **Secret key missing:** generate a new random key and set `SECRET_KEY` in `.env`.
-- **Port already in use:** set another `PORT` value in `.env`.
+## Security and current limitations
 
-## Project context
+- Passwords are stored as Werkzeug password hashes, not plain text.
+- Keep `.env` out of Git. The API key is read by the Flask backend and is not placed in browser JavaScript.
+- Use a strong, unique `SECRET_KEY`; enable secure cookies and HTTPS for deployment.
+- The password-reset token verification and reset page are present, but automated email delivery of reset links is **not yet integrated**.
+- Before public deployment, add and verify CSRF protection, login/register rate limiting, stronger password policy, and a production-ready password-reset email workflow.
+- This project has not yet been independently build-tested or security-audited as part of this README update. Configure your own API key and test the complete flow locally before presenting it as a live deployment.
 
-This is an academic full-stack web application. The README describes the repository's implemented routes and integrations; it does not claim that the application has passed a production security audit.
+## Resume description
+
+**Sky Buddy — Full-Stack Weather Forecast Application**  
+Built a weather dashboard using Python, Flask, SQLAlchemy, SQLite, HTML, CSS, and JavaScript. Integrated the OpenWeatherMap API for city- and location-based weather lookup, and implemented user registration, login, profile preferences, and theme settings.
+
+## Future improvements
+
+- Add automated tests for authentication, settings, and weather API routes.
+- Complete password-reset email delivery and add CSRF protection.
+- Add request throttling, input validation, and deployment configuration.
+- Add screenshots and a hosted demo after the application has been tested end to end.
