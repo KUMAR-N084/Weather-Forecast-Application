@@ -7,11 +7,24 @@ import re
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
 from collections import Counter
+import os
+import logging
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'YOUR_SUPER_SECRET_KEY_HERE_REPLACE_ME' # REPLACE THIS WITH A STRONG, UNIQUE KEY!
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///weather_app.db'
+secret_key = os.environ.get('SECRET_KEY')
+if not secret_key:
+    raise RuntimeError('SECRET_KEY is missing. Copy .env.example to .env and set a unique secret key.')
+app.config['SECRET_KEY'] = secret_key
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///weather_app.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SECURE'] = os.environ.get('COOKIE_SECURE', 'false').lower() == 'true'
+logging.basicConfig(level=os.environ.get('LOG_LEVEL', 'INFO'))
+logger = logging.getLogger(__name__)
 db = SQLAlchemy(app)
 s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
@@ -259,81 +272,89 @@ def reset_token(token):
 # API endpoint to fetch weather data (client-side)
 @app.route('/get_weather')
 def get_weather():
-    city = request.args.get('city')
+    city = (request.args.get('city') or '').strip()
     lat = request.args.get('lat')
     lon = request.args.get('lon')
     units = request.args.get('units', 'metric')
-    
-    # Replace the placeholder below with your actual OpenWeatherMap API key.
-    api_key = 'YOUR_OPENWEATHERMAP_API_KEY_HERE' 
+    api_key = os.environ.get('OPENWEATHERMAP_API_KEY')
 
-    if not api_key or api_key == 'YOUR_OPENWEATHERMAP_API_KEY_HERE':
-        return jsonify({"error": "API key not configured. Please add your API key in app.py."}), 500
+    if not api_key:
+        return jsonify({"error": "Weather service is not configured. Set OPENWEATHERMAP_API_KEY in .env."}), 503
+    if units not in ('standard', 'metric', 'imperial'):
+        return jsonify({"error": "Invalid units value."}), 400
 
     if city:
-        current_weather_url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units={units}"
-        forecast_url = f"http://api.openweathermap.org/data/2.5/forecast?q={city}&appid={api_key}&units={units}"
-    elif lat and lon:
-        current_weather_url = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={api_key}&units={units}"
-        forecast_url = f"http://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={api_key}&units={units}"
+        location = {"q": city}
+    elif lat is not None and lon is not None:
+        try:
+            latitude, longitude = float(lat), float(lon)
+            if not (-90 <= latitude <= 90 and -180 <= longitude <= 180):
+                raise ValueError
+            location = {"lat": latitude, "lon": longitude}
+        except (TypeError, ValueError):
+            return jsonify({"error": "Valid latitude and longitude are required."}), 400
     else:
         return jsonify({"error": "City name or coordinates are required."}), 400
 
+    base_url = "https://api.openweathermap.org/data/2.5"
+    params = {**location, "appid": api_key, "units": units}
     try:
-        current_response = requests.get(current_weather_url)
+        current_response = requests.get(f"{base_url}/weather", params=params, timeout=10)
         current_response.raise_for_status()
-        current_data = current_response.json()
-
-        forecast_response = requests.get(forecast_url)
+        forecast_response = requests.get(f"{base_url}/forecast", params=params, timeout=10)
         forecast_response.raise_for_status()
-        forecast_data = forecast_response.json()
+        return jsonify({
+            "current": current_response.json(),
+            "forecast": forecast_response.json()
+        })
+    except requests.exceptions.HTTPError as error:
+        status = error.response.status_code if error.response is not None else 502
+        logger.warning("Weather provider returned HTTP status %s", status)
+        if status == 404:
+            return jsonify({"error": "City not found. Please check the spelling."}), 404
+        if status in (401, 403):
+            return jsonify({"error": "Weather service rejected its API credentials. Check the configured key."}), 502
+        return jsonify({"error": "Weather provider is temporarily unavailable."}), 502
+    except requests.exceptions.RequestException:
+        logger.exception("Weather provider request failed")
+        return jsonify({"error": "Unable to reach the weather service. Please try again."}), 503
 
-        return jsonify({"current": current_data, "forecast": forecast_data})
-    except requests.exceptions.HTTPError as http_err:
-        error_message = f"HTTP error occurred: {http_err} - {http_err.response.text}"
-        print(error_message)
-        if http_err.response.status_code == 404:
-             return jsonify({"error": f"City not found. Please check the spelling."}), 404
-        return jsonify({"error": "City not found or API error.", "details": http_err.response.text}), http_err.response.status_code
-    except requests.exceptions.ConnectionError as conn_err:
-        error_message = f"Connection error occurred: {conn_err}"
-        print(error_message)
-        return jsonify({"error": "Network connection error. Please check your internet connection."}), 503
-    except Exception as err:
-        error_message = f"An unexpected error occurred: {err}"
-        print(error_message)
-        return jsonify({"error": "An unexpected error occurred."}), 500
 
 @app.route('/get_city_suggestions')
 def get_city_suggestions():
-    query = request.args.get('q', '')
+    query = (request.args.get('q') or '').strip()
     if not query:
         return jsonify([])
+    if len(query) > 100:
+        return jsonify({"error": "Search query is too long."}), 400
 
-    api_key = 'YOUR_OPENWEATHERMAP_API_KEY_HERE' # Use your OpenWeatherMap API key here
-    if not api_key or api_key == 'YOUR_OPENWEATHERMAP_API_KEY_HERE':
-        return jsonify({"error": "API key not configured."}), 500
-
-    find_url = f"http://api.openweathermap.org/data/2.5/find?q={query}&type=like&sort=population&cnt=10&appid={api_key}"
+    api_key = os.environ.get('OPENWEATHERMAP_API_KEY')
+    if not api_key:
+        return jsonify({"error": "Weather service is not configured."}), 503
 
     try:
-        response = requests.get(find_url)
+        response = requests.get(
+            "https://api.openweathermap.org/data/2.5/find",
+            params={"q": query, "type": "like", "sort": "population", "cnt": 10, "appid": api_key},
+            timeout=10,
+        )
         response.raise_for_status()
         data = response.json()
         suggestions = []
-        if data and data.get('list'):
-            for city_data in data['list']:
-                name = city_data.get('name')
-                country = city_data.get('sys', {}).get('country')
-                if name and country:
-                    suggestions.append(f"{name}, {country}")
+        for city_data in data.get('list', []):
+            name = city_data.get('name')
+            country = city_data.get('sys', {}).get('country')
+            if name and country:
+                suggestions.append(f"{name}, {country}")
         return jsonify(suggestions)
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching city suggestions: {e}")
-        return jsonify({"error": "Failed to fetch city suggestions."}), 500
+    except requests.exceptions.RequestException:
+        logger.exception("City suggestion request failed")
+        return jsonify({"error": "Failed to fetch city suggestions."}), 503
+
 
 # Run the Flask app
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(debug=True)
+    debug_mode = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
+    app.run(debug=debug_mode, host=os.environ.get('HOST', '127.0.0.1'), port=int(os.environ.get('PORT', '5000')))
